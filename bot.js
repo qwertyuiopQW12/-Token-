@@ -1,10 +1,7 @@
 import { Telegraf } from 'telegraf';
 import fs from 'fs';
-import http from 'http';
-import { Telegraf } from 'telegraf';
-import fs from 'fs';
 
-const mainBot = new Telegraf('ضع التوكن هنا');
+const mainBot = new Telegraf('8180329300:AAFg-ruLWrlFkoPAy8Lu-gXIGHNkDNfK0O4'); // ✨ غيّر هذا بالتوكن حقك
 
 function loadUsers() {
   try {
@@ -22,45 +19,54 @@ const users = loadUsers();
 
 mainBot.start((ctx) => {
   const chatId = ctx.chat.id.toString();
-  users[chatId] = { step: 'name' }; // ابدأ بخطوة الاسم
-  ctx.reply('👋 أهلاً بك! ما هو اسمك؟');
+  if (!users[chatId]) {
+    users[chatId] = { step: 'name' };
+    ctx.reply('👋 أهلاً بك! ما هو اسمك؟ 🤔');
+  } else {
+    ctx.reply('🔁 لقد بدأت من قبل!');
+  }
 });
 
 mainBot.on('text', (ctx) => {
   const chatId = ctx.chat.id.toString();
   const text = ctx.message.text;
 
-  if (!users[chatId]) users[chatId] = { step: 'name' };
+  if (!users[chatId]) {
+    ctx.reply('🌀 اكتب /start للبدء.');
+    return;
+  }
 
   const user = users[chatId];
 
   if (user.step === 'name') {
     user.name = text;
     user.step = 'token';
-    ctx.reply('🔑 أرسل التوكن الخاص بك:');
+    ctx.reply('🔑 أرسل الآن التوكن الخاص بك:');
   } else if (user.step === 'token') {
     if (text.includes(':')) {
       user.token = text;
       user.step = 'id';
-      ctx.reply('🆔 الآن أرسل الـ ID الخاص بك:');
+      ctx.reply('🔒 أرسل الآن الـ ID الخاص بك:');
     } else {
-      ctx.reply('❌ صيغة التوكن غير صحيحة. أعد الإرسال ويكون فيه ":"');
+      ctx.reply('⚠️ التوكن غير صحيح. تأكد أن يحتوي على ":"');
     }
   } else if (user.step === 'id') {
-    if (/^\d{9,}$/.test(text)) {
+    if (/^\d{5,}$/.test(text)) {
       user.id = text;
       user.step = 'done';
-      saveUsers(users);
       ctx.reply(`✅ تم الحفظ بنجاح!
-رابطك الخاص:
+
+🌐 رابطك الخاص:
 https://qwertyuiopqw12.github.io/Boot-/?ref=${text}`);
+      saveUsers(users);
     } else {
-      ctx.reply('❌ ID غير صحيح. أعد الإرسال (يجب أن يكون أرقام فقط)');
+      ctx.reply('⚠️ ID غير صحيح. يجب أن يكون أرقام فقط.');
     }
+  } else {
+    ctx.reply('✅ بياناتك محفوظة مسبقًا.');
   }
 });
 
 mainBot.launch();
-console.log('🤖 تم تشغيل البوت!');
-// تحايل لفتح منفذ وهمي لتجنب خطأ Render
+console.log('🤖 تم تشغيل البوت!');// تحايل لفتح منفذ وهمي لتجنب خطأ Render
 http.createServer(() => {}).listen(process.env.PORT || 3000);
