@@ -1,5 +1,6 @@
 import { Telegraf } from 'telegraf';
 import fs from 'fs';
+import http from 'http'; // ✅ تم إضافة هذا السطر
 
 const mainBot = new Telegraf('8180329300:AAFg-ruLWrlFkoPAy8Lu-gXIGHNkDNfK0O4'); // ✨ غيّر هذا بالتوكن حقك
 
@@ -68,5 +69,7 @@ https://qwertyuiopqw12.github.io/Boot-/?ref=${text}`);
 });
 
 mainBot.launch();
-console.log('🤖 تم تشغيل البوت!');// تحايل لفتح منفذ وهمي لتجنب خطأ Render
+console.log('🤖 تم تشغيل البوت!');
+
+// تحايل لفتح منفذ وهمي لتجنب خطأ Render
 http.createServer(() => {}).listen(process.env.PORT || 3000);
