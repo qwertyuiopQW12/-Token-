@@ -2,7 +2,7 @@ import { Telegraf } from 'telegraf';
 import fs from 'fs';
 import http from 'http';
 
-const mainBot = new Telegraf('توكن_البوت_هنا');
+const mainBot = new Telegraf('8180329300:AAFg-ruLWrlFkoPAy8Lu-gXIGHNkDNfK0O4');
 
 function loadUsers() {
   try {
