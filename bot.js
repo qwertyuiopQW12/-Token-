@@ -44,3 +44,5 @@ https://qwertyuiopqw12.github.io/Boot-/?ref=${text}`);
 
 mainBot.launch();
 console.log('🤖 تم تشغيل البوت!');
+
+setInterval(() => {}, 1000);
